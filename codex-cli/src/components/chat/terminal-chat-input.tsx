@@ -72,6 +72,7 @@ export default function TerminalChatInput({
   const [draftInput, setDraftInput] = useState<string>("");
 
   // Load command history on component mount
+  // 在组件挂载时加载命令历史
   useEffect(() => {
     async function loadHistory() {
       const historyEntries = await loadCommandHistory();
@@ -181,6 +182,7 @@ export default function TerminalChatInput({
       if (inputValue === "q" || inputValue === ":q" || inputValue === "exit") {
         setInput("");
         // wait one 60ms frame
+      // 等待一个60毫秒帧
         setTimeout(() => {
           app.exit();
           onExit();
@@ -195,6 +197,8 @@ export default function TerminalChatInput({
 
         // Emit a system message to confirm the clear action.  We *append*
         // it so Ink's <Static> treats it as new output and actually renders it.
+        // 发出一个系统消息来确认清除操作。我们*追加*它，
+        // 这样Ink的<Static>将其视为新输出并实际渲染它。
         setItems((prev) => [
           ...prev,
           {
@@ -211,12 +215,15 @@ export default function TerminalChatInput({
 
         // Import clearCommandHistory function to avoid circular dependencies
         // Using dynamic import to lazy-load the function
+        // 导入clearCommandHistory函数以避免循环依赖
+        // 使用动态导入来懒加载函数
         import("../../utils/storage/command-history.js").then(
           async ({ clearCommandHistory }) => {
             await clearCommandHistory();
             setHistory([]);
 
             // Emit a system message to confirm the history clear action
+            // 发出一个系统消息来确认历史清除操作
             setItems((prev) => [
               ...prev,
               {
@@ -235,14 +242,17 @@ export default function TerminalChatInput({
       }
 
       // detect image file paths for dynamic inclusion
+      // 检测图像文件路径以进行动态包含
       const images: Array<string> = [];
       let text = inputValue;
       // markdown-style image syntax: ![alt](path)
+      // markdown风格的图像语法：![alt](path)
       text = text.replace(/!\[[^\]]*?\]\(([^)]+)\)/g, (_m, p1: string) => {
         images.push(p1.startsWith("file://") ? fileURLToPath(p1) : p1);
         return "";
       });
       // quoted file paths ending with common image extensions (e.g. '/path/to/img.png')
+      // 以常见图像扩展名结尾的引用文件路径（例如“/path/to/img.png”）
       text = text.replace(
         /['"]([^'"]+?\.(?:png|jpe?g|gif|bmp|webp|svg))['"]/gi,
         (_m, p1: string) => {
@@ -251,7 +261,9 @@ export default function TerminalChatInput({
         },
       );
       // bare file paths ending with common image extensions
+      // 以常见图像扩展名结尾的裸文件路径
       text = text.replace(
+        // eslint-disable-next-line no-useless-escape
         // eslint-disable-next-line no-useless-escape
         /\b(?:\.[\/\\]|[\/\\]|[A-Za-z]:[\/\\])?[\w-]+(?:[\/\\][\w-]+)*\.(?:png|jpe?g|gif|bmp|webp|svg)\b/gi,
         (match: string) => {
@@ -267,9 +279,11 @@ export default function TerminalChatInput({
       submitInput([inputItem]);
 
       // Get config for history persistence
+      // 获取历史持久化的配置
       const config = loadConfig();
 
       // Add to history and update state
+      // 添加到历史并更新状态
       const updatedHistory = await addToHistory(value, history, {
         maxSize: config.history?.maxSize ?? 1000,
         saveHistory: config.history?.saveHistory ?? true,
@@ -396,6 +410,12 @@ function TerminalChatInputThinking({
   // we can identify this special case and trigger the interrupt while still
   // requiring a double press for the normal single‑byte ESC events.
   // ---------------------------------------------------------------------
+  // 原始stdin监听器，用于捕获终端在*单个*块中传递两个
+  // 连续的ESC字节("\x1B\x1B")的情况。Ink的`useInput`
+  // 将该序列折叠为一个键事件，因此上面的常规两步骤
+  // 处理程序永远看不到第二次按下。通过检查原始数据，
+  // 我们可以识别这种特殊情况并触发中断，同时仍然
+  // 要求对正常的单字节ESC事件进行双击。
 
   const { stdin, setRawMode } = useStdin();
 
@@ -406,6 +426,8 @@ function TerminalChatInputThinking({
 
     // Ensure raw mode – already enabled by Ink when the component has focus,
     // but called defensively in case that assumption ever changes.
+    // 确保原始模式 - 当组件有焦点时Ink已经启用了原始模式，
+    // 但为了防御性考虑，以防该假设发生变化而调用。
     setRawMode?.(true);
 
     const onData = (data: Buffer | string) => {
@@ -414,9 +436,11 @@ function TerminalChatInputThinking({
       }
 
       // Handle both Buffer and string forms.
+      // 处理Buffer和字符串形式。
       const str = Buffer.isBuffer(data) ? data.toString("utf8") : data;
       if (str === "\x1b\x1b") {
         // Treat as the first Escape press – prompt the user for confirmation.
+        // 将其视为第一次Escape按键 - 提示用户确认。
         if (isLoggingEnabled()) {
           log(
             "raw stdin: received collapsed ESC ESC – starting confirmation timer",
@@ -435,6 +459,7 @@ function TerminalChatInputThinking({
   }, [stdin, awaitingConfirm, onInterrupt, active, setRawMode]);
 
   // Cycle the "Thinking…" animation dots.
+  // 循环“思考中...”动画点。
   useInterval(() => {
     setDots((prev) => (prev.length < 3 ? prev + "." : ""));
   }, 500);
@@ -442,6 +467,8 @@ function TerminalChatInputThinking({
   // Listen for the escape key to allow the user to interrupt the current
   // operation. We require two presses within a short window (1.5s) to avoid
   // accidental cancellations.
+  // 监听退出键，允许用户中断当前操作。
+  // 我们要求在短时间内（1.5秒）按两次，以避免意外取消。
   useInput(
     (_input, key) => {
       if (!key.escape) {

@@ -2,6 +2,7 @@
 import "dotenv/config";
 
 // Hack to suppress deprecation warnings (punycode)
+// 抑制弃用警告的技巧（punycode）
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (process as any).noDeprecation = true;
 
@@ -39,12 +40,17 @@ import React from "react";
 
 // Call this early so `tail -F "$TMPDIR/oai-codex/codex-cli-latest.log"` works
 // immediately. This must be run with DEBUG=1 for logging to work.
+// 尽早调用此函数，以便 `tail -F "$TMPDIR/oai-codex/codex-cli-latest.log"` 立即生效。
+// 必须使用 DEBUG=1 运行才能使日志记录正常工作。
 initLogger();
 
 // TODO: migrate to new versions of quiet mode
+// TODO: 迁移到新版本的安静模式
 //
 //     -q, --quiet    Non-interactive quiet mode that only prints final message
+//     -q, --quiet    非交互式安静模式，仅打印最终消息
 //     -j, --json     Non-interactive JSON output mode that prints JSON messages
+//     -j, --json     非交互式JSON输出模式，打印JSON消息
 
 const cli = meow(
   `
@@ -164,6 +170,7 @@ const cli = meow(
 );
 
 // Handle 'completion' subcommand before any prompting or API calls
+// 在任何提示或API调用之前处理'completion'子命令
 if (cli.input[0] === "completion") {
   const shell = cli.input[1] || "bash";
   const scripts: Record<string, string> = {
@@ -195,17 +202,21 @@ complete -c codex -a '(_fish_complete_path)' -d 'file path'`,
   process.exit(0);
 }
 // Show help if requested
+// 如果请求显示帮助
 if (cli.flags.help) {
   cli.showHelp();
 }
 
 // Handle config flag: open instructions file in editor and exit
+// 处理配置标志：在编辑器中打开指令文件并退出
 if (cli.flags.config) {
   // Ensure configuration and instructions file exist
+  // 确保配置和指令文件存在
   try {
     loadConfig();
   } catch {
     // ignore errors
+    // 忽略错误
   }
   const filePath = INSTRUCTIONS_FILEPATH;
   const editor =
@@ -216,6 +227,7 @@ if (cli.flags.config) {
 
 // ---------------------------------------------------------------------------
 // API key handling
+// API密钥处理
 // ---------------------------------------------------------------------------
 
 const apiKey = process.env["OPENAI_API_KEY"];
@@ -281,6 +293,7 @@ if (cli.flags.view) {
 }
 
 // If we are running in --fullcontext mode, do that and exit.
+// 如果我们在--fullcontext模式下运行，执行该操作并退出。
 if (fullContextMode) {
   await runSinglePass({
     originalPrompt: prompt,
@@ -292,11 +305,13 @@ if (fullContextMode) {
 }
 
 // Ensure that all values in additionalWritableRoots are absolute paths.
+// 确保additionalWritableRoots中的所有值都是绝对路径。
 const additionalWritableRoots: ReadonlyArray<string> = (
   cli.flags.writableRoot ?? []
 ).map((p) => path.resolve(p));
 
 // If we are running in --quiet mode, do that and exit.
+// 如果我们在--quiet模式下运行，执行该操作并退出。
 const quietMode = Boolean(cli.flags.quiet);
 const autoApproveEverything = Boolean(
   cli.flags.dangerouslyAutoApproveEverything,
@@ -326,16 +341,26 @@ if (quietMode) {
 }
 
 // Default to the "suggest" policy.
+// 默认为"suggest"策略。
 // Determine the approval policy to use in interactive mode.
+// 确定在交互模式下使用的审批策略。
 //
 // Priority (highest → lowest):
+// 优先级（最高→最低）：
 // 1. --fullAuto – run everything automatically in a sandbox.
+// 1. --fullAuto – 在沙箱中自动运行所有内容。
 // 2. --dangerouslyAutoApproveEverything – run everything **without** a sandbox
+// 2. --dangerouslyAutoApproveEverything – **不使用**沙箱或提示运行所有内容。
 //    or prompts.  This is intended for completely trusted environments.  Since
+//    这是为完全可信的环境设计的。由于
 //    it is more dangerous than --fullAuto we deliberately give it lower
+//    它比--fullAuto更危险，我们故意给它较低的
 //    priority so a user specifying both flags still gets the safer behaviour.
+//    优先级，这样指定两个标志的用户仍然会得到更安全的行为。
 // 3. --autoEdit – automatically approve edits, but prompt for commands.
+// 3. --autoEdit – 自动批准编辑，但提示命令。
 // 4. Default – suggest mode (prompt for everything).
+// 4. 默认 – 建议模式（提示所有内容）。
 
 const approvalPolicy: ApprovalPolicy =
   cli.flags.fullAuto || cli.flags.approvalMode === "full-auto"
@@ -363,6 +388,7 @@ const instance = render(
 setInkRenderer(instance);
 
 function formatResponseItemForQuietMode(item: ResponseItem): string {
+  // 格式化安静模式下的响应项
   if (!PRETTY_PRINT) {
     return JSON.stringify(item);
   }
@@ -436,6 +462,7 @@ async function runQuietMode({
     },
     onLoading: () => {
       /* intentionally ignored in quiet mode */
+/* 在安静模式下有意忽略 */
     },
     getCommandConfirmation: (
       _command: Array<string>,
@@ -444,6 +471,7 @@ async function runQuietMode({
     },
     onLastResponseId: () => {
       /* intentionally ignored in quiet mode */
+/* 在安静模式下有意忽略 */
     },
   });
 
@@ -462,6 +490,7 @@ process.on("SIGTERM", exit);
 
 // ---------------------------------------------------------------------------
 // Fallback for Ctrl‑C when stdin is in raw‑mode
+// 当stdin处于原始模式时，Ctrl-C的后备处理
 // ---------------------------------------------------------------------------
 
 if (process.stdin.isTTY) {
@@ -469,6 +498,9 @@ if (process.stdin.isTTY) {
   // Ctrl‑C while some other component has focus and Ink is intercepting
   // input. Node does *not* emit a SIGINT in raw‑mode, so we listen for the
   // corresponding byte (0x03) ourselves and trigger a graceful shutdown.
+  // 确保在用户按下Ctrl-C时不会让终端处于原始模式，尤其是当其他组件有焦点且Ink正在拦截
+  // 输入时。Node在原始模式下*不会*发出SIGINT信号，所以我们自己监听
+  // 相应的字节(0x03)并触发优雅关闭。
   const onRawData = (data: Buffer | string): void => {
     const str = Buffer.isBuffer(data) ? data.toString("utf8") : data;
     if (str === "\u0003") {
@@ -480,4 +512,5 @@ if (process.stdin.isTTY) {
 
 // Ensure terminal clean‑up always runs, even when other code calls
 // `process.exit()` directly.
+// 确保终端清理总是运行，即使其他代码直接调用`process.exit()`。
 process.once("exit", onExit);

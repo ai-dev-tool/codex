@@ -50,10 +50,14 @@ const colorsByPolicy: Record<ApprovalPolicy, ColorName | undefined> = {
 
 /**
  * Generates an explanation for a shell command using the OpenAI API.
+ * 使用OpenAI API为shell命令生成解释。
  *
  * @param command The command to explain
+ * @param command 要解释的命令
  * @param model The model to use for generating the explanation
+ * @param model 用于生成解释的模型
  * @returns A human-readable explanation of what the command does
+ * @returns 关于命令功能的人类可读解释
  */
 async function generateCommandExplanation(
   command: Array<string>,
@@ -61,15 +65,18 @@ async function generateCommandExplanation(
 ): Promise<string> {
   try {
     // Create a temporary OpenAI client
+    // 创建一个临时的OpenAI客户端
     const oai = new OpenAI({
       apiKey: process.env["OPENAI_API_KEY"],
       baseURL: OPENAI_BASE_URL,
     });
 
     // Format the command for display
+    // 格式化命令以便显示
     const commandForDisplay = formatCommandForDisplay(command);
 
     // Create a prompt that asks for an explanation with a more detailed system prompt
+    // 创建一个提示，使用更详细的系统提示来请求解释
     const response = await oai.chat.completions.create({
       model,
       messages: [
@@ -86,6 +93,7 @@ async function generateCommandExplanation(
     });
 
     // Extract the explanation from the response
+    // 从响应中提取解释
     const explanation =
       response.choices[0]?.message.content || "Unable to generate explanation.";
     return explanation;
@@ -93,15 +101,19 @@ async function generateCommandExplanation(
     log(`Error generating command explanation: ${error}`);
 
     // Improved error handling with more specific error information
+    // 改进的错误处理，提供更具体的错误信息
     let errorMessage = "Unable to generate explanation due to an error.";
 
     if (error instanceof Error) {
       // Include specific error message for better debugging
+      // 包含特定的错误消息以便更好地调试
       errorMessage = `Unable to generate explanation: ${error.message}`;
 
       // If it's an API error, check for more specific information
+      // 如果是API错误，检查更具体的信息
       if ("status" in error && typeof error.status === "number") {
         // Handle API-specific errors
+        // 处理API特定的错误
         if (error.status === 401) {
           errorMessage =
             "Unable to generate explanation: API key is invalid or expired.";
@@ -128,12 +140,14 @@ export default function TerminalChat({
   fullStdout,
 }: Props): React.ReactElement {
   // Desktop notification setting
+  // 桌面通知设置
   const notify = config.notify;
   const [model, setModel] = useState<string>(config.model);
   const [lastResponseId, setLastResponseId] = useState<string | null>(null);
   const [items, setItems] = useState<Array<ResponseItem>>([]);
   const [loading, setLoading] = useState<boolean>(false);
   // Allow switching approval modes at runtime via an overlay.
+  // 允许通过覆盖层在运行时切换审批模式。
   const [approvalPolicy, setApprovalPolicy] = useState<ApprovalPolicy>(
     initialApprovalPolicy,
   );
@@ -156,11 +170,14 @@ export default function TerminalChat({
 
   // Keep a single AgentLoop instance alive across renders;
   // recreate only when model/instructions/approvalPolicy change.
+  // 在渲染过程中保持单个AgentLoop实例活跃；
+  // 仅在model/instructions/approvalPolicy更改时重新创建。
   const agentRef = React.useRef<AgentLoop>();
   const [, forceUpdate] = React.useReducer((c) => c + 1, 0); // trigger re‑render
 
   // ────────────────────────────────────────────────────────────────
   // DEBUG: log every render w/ key bits of state
+  // 调试：记录每次渲染的关键状态位
   // ────────────────────────────────────────────────────────────────
   if (isLoggingEnabled()) {
     log(
@@ -181,6 +198,7 @@ export default function TerminalChat({
     }
 
     // Tear down any existing loop before creating a new one
+    // 在创建新循环之前拆除任何现有循环
     agentRef.current?.terminate();
 
     agentRef.current = new AgentLoop({
@@ -207,19 +225,23 @@ export default function TerminalChat({
         const commandForDisplay = formatCommandForDisplay(command);
 
         // First request for confirmation
+        // 首次请求确认
         let { decision: review, customDenyMessage } = await requestConfirmation(
           <TerminalChatToolCallCommand commandForDisplay={commandForDisplay} />,
         );
 
         // If the user wants an explanation, generate one and ask again
+        // 如果用户想要解释，生成一个并再次询问
         if (review === ReviewDecision.EXPLAIN) {
           log(`Generating explanation for command: ${commandForDisplay}`);
 
           // Generate an explanation using the same model
+          // 使用相同的模型生成解释
           const explanation = await generateCommandExplanation(command, model);
           log(`Generated explanation: ${explanation}`);
 
           // Ask for confirmation again, but with the explanation
+          // 再次请求确认，但带有解释
           const confirmResult = await requestConfirmation(
             <TerminalChatToolCallCommand
               commandForDisplay={commandForDisplay}
@@ -228,10 +250,12 @@ export default function TerminalChat({
           );
 
           // Update the decision based on the second confirmation
+          // 根据第二次确认更新决定
           review = confirmResult.decision;
           customDenyMessage = confirmResult.customDenyMessage;
 
           // Return the final decision with the explanation
+          // 返回带有解释的最终决定
           return { review, customDenyMessage, applyPatch, explanation };
         }
 
@@ -240,6 +264,7 @@ export default function TerminalChat({
     });
 
     // force a render so JSX below can "see" the freshly created agent
+    // 强制渲染，使JSX能够“看到”新创建的代理
     forceUpdate();
 
     if (isLoggingEnabled()) {
@@ -265,10 +290,13 @@ export default function TerminalChat({
   // whenever loading starts/stops, reset or start a timer — but pause the
   // timer while a confirmation overlay is displayed so we don't trigger a
   // re‑render every second during apply_patch reviews.
+  // 每当加载开始/停止时，重置或启动计时器 — 但在显示确认覆盖层时暂停计时器，
+  // 这样在apply_patch审查期间我们不会每秒触发重新渲染。
   useEffect(() => {
     let handle: ReturnType<typeof setInterval> | null = null;
     // Only tick the "thinking…" timer when the agent is actually processing
     // a request *and* the user is not being asked to review a command.
+    // 只有当代理实际正在处理请求*并且*用户没有被要求审查命令时，才会增加“思考中...”计时器。
     if (loading && confirmationPrompt == null) {
       setThinkingSeconds(0);
       handle = setInterval(() => {
@@ -288,9 +316,11 @@ export default function TerminalChat({
   }, [loading, confirmationPrompt]);
 
   // Notify desktop with a preview when an assistant response arrives
+  // 当助手响应到达时，使用预览通知桌面
   const prevLoadingRef = useRef<boolean>(false);
   useEffect(() => {
     // Only notify when notifications are enabled
+    // 只有在启用通知时才通知
     if (!notify) {
       prevLoadingRef.current = loading;
       return;
@@ -303,6 +333,7 @@ export default function TerminalChat({
     ) {
       if (process.platform === "darwin") {
         // find the last assistant message
+        // 查找最后一条助手消息
         const assistantMessages = items.filter(
           (i) => i.type === "message" && i.role === "assistant",
         );
@@ -331,6 +362,7 @@ export default function TerminalChat({
   }, [notify, loading, confirmationPrompt, items, PWD]);
 
   // Let's also track whenever the ref becomes available
+  // 让我们也跟踪ref何时可用
   const agent = agentRef.current;
   useEffect(() => {
     if (isLoggingEnabled()) {
@@ -340,6 +372,7 @@ export default function TerminalChat({
 
   // ---------------------------------------------------------------------
   // Dynamic layout constraints – keep total rendered rows <= terminal rows
+  // 动态布局约束 - 保持总渲染行数 <= 终端行数
   // ---------------------------------------------------------------------
 
   const { rows: terminalRows } = useTerminalSize();
@@ -356,6 +389,7 @@ export default function TerminalChat({
         await createInputItem(initialPrompt || "", initialImagePaths || []),
       ];
       // Clear them to prevent subsequent runs
+      // 清除它们以防止后续运行
       setInitialPrompt("");
       setInitialImagePaths([]);
       agent?.run(inputItems);
@@ -365,6 +399,7 @@ export default function TerminalChat({
 
   // ────────────────────────────────────────────────────────────────
   // In-app warning if CLI --model isn't in fetched list
+  // 如果CLI --model不在获取的列表中，则在应用内警告
   // ────────────────────────────────────────────────────────────────
   useEffect(() => {
     (async () => {
@@ -387,10 +422,12 @@ export default function TerminalChat({
       }
     })();
     // run once on mount
+    // 在挂载时运行一次
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Just render every item in order, no grouping/collapse
+  // 按顺序渲染每个项目，没有分组/折叠
   const lastMessageBatch = items.map((item) => ({ item }));
   const groupCounts: Record<string, number> = {};
   const userMsgCount = items.filter(
@@ -467,6 +504,7 @@ export default function TerminalChat({
               setLoading(false);
 
               // Add a system message to indicate the interruption
+              // 添加系统消息以指示中断
               setItems((prev) => [
                 ...prev,
                 {

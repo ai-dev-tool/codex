@@ -10,6 +10,8 @@ function getCommonRoots() {
     CONFIG_DIR,
     // Without this root, it'll cause:
     // pyenv: cannot rehash: $HOME/.pyenv/shims isn't writable
+    // 没有这个根目录，将会导致：
+    // pyenv: 无法重新哈希：$HOME/.pyenv/shims不可写
     `${process.env["HOME"]}/.pyenv`,
   ];
 }
@@ -25,6 +27,8 @@ export function execWithSeatbelt(
   if (writableRoots.length > 0) {
     // Add `~/.codex` to the list of writable roots
     // (if there's any already, not in read-only mode)
+    // 将`~/.codex`添加到可写根目录列表
+    // （如果已经有任何根目录，不在只读模式下）
     getCommonRoots().map((root) => writableRoots.push(root));
     const { policies, params } = writableRoots
       .map((root, index) => ({
@@ -73,14 +77,19 @@ const READ_ONLY_SEATBELT_POLICY = `
 
 ; inspired by Chrome's sandbox policy:
 ; https://source.chromium.org/chromium/chromium/src/+/main:sandbox/policy/mac/common.sb;l=273-319;drc=7b3962fe2e5fc9e2ee58000dc8fbf3429d84d3bd
+; 受Chrome沙箱策略启发：
+; https://source.chromium.org/chromium/chromium/src/+/main:sandbox/policy/mac/common.sb;l=273-319;drc=7b3962fe2e5fc9e2ee58000dc8fbf3429d84d3bd
 
 ; start with closed-by-default
+; 默认从关闭状态开始
 (deny default)
 
 ; allow read-only file operations
+; 允许只读文件操作
 (allow file-read*)
 
 ; child processes inherit the policy of their parent
+; 子进程继承其父进程的策略
 (allow process-exec)
 (allow process-fork)
 (allow signal (target self))
@@ -91,6 +100,7 @@ const READ_ONLY_SEATBELT_POLICY = `
     (vnode-type CHARACTER-DEVICE)))
 
 ; sysctls permitted.
+; 允许的系统控制参数。
 (allow sysctl-read
   (sysctl-name "hw.activecpu")
   (sysctl-name "hw.busfrequency_compat")

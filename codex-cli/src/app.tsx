@@ -82,6 +82,7 @@ export default function App({
               app.exit();
               onExit();
               // eslint-disable-next-line
+              // 退出！再次运行以接受或从git仓库内部运行
               console.error(
                 "Quitting! Run again to accept or from inside a git repo",
               );

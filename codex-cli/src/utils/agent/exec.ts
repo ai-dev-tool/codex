@@ -10,10 +10,14 @@ import fs from "fs";
 import os from "os";
 
 const DEFAULT_TIMEOUT_MS = 10_000; // 10 seconds
+// 10秒
 
 /**
  * This function should never return a rejected promise: errors should be
  * mapped to a non-zero exit code and the error message should be in stderr.
+ *
+ * 该函数不应该返回被拒绝的promise：错误应该映射为
+ * 非零的退出代码，错误消息应该在stderr中。
  */
 export function exec(
   {
@@ -27,6 +31,8 @@ export function exec(
 ): Promise<ExecResult> {
   // This is a temporary measure to understand what are the common base commands
   // until we start persisting and uploading rollouts
+  // 这是一种临时措施，用于了解常见的基本命令
+  // 直到我们开始持久化和上传展开
 
   const execForSandbox =
     sandbox === SandboxType.MACOS_SEATBELT ? execWithSeatbelt : rawExec;
@@ -36,6 +42,7 @@ export function exec(
     ...(workdir ? { cwd: workdir } : {}),
   };
   // Merge default writable roots with any user-specified ones.
+  // 将默认的可写根目录与用户指定的根目录合并。
   const writableRoots = [
     process.cwd(),
     os.tmpdir(),
@@ -47,6 +54,8 @@ export function exec(
 export function execApplyPatch(patchText: string): ExecResult {
   // This is a temporary measure to understand what are the common base commands
   // until we start persisting and uploading rollouts
+  // 这是一种临时措施，用于了解常见的基本命令
+  // 直到我们开始持久化和上传展开
 
   try {
     const result = process_patch(
@@ -62,6 +71,7 @@ export function execApplyPatch(patchText: string): ExecResult {
     };
   } catch (error: unknown) {
     // @ts-expect-error error might not be an object or have a message property.
+    // @ts-expect-error 错误可能不是对象或没有message属性。
     const stderr = String(error.message ?? error);
     return {
       stdout: "",

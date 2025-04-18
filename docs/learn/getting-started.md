@@ -101,31 +101,31 @@ bun run format
    - 命令行入口点，通过 `package.json` 的 `bin` 字段配置（使用 Node.js 的 shebang 和 package.json 配置）
    - 全局安装后可通过 `codex` 命令直接调用（使用 npm/yarn 的全局安装机制）
    - 负责：
-     - 命令行参数解析（使用 `meow` 库进行参数解析）
-     - 环境变量加载（使用 `dotenv` 库加载 .env 文件）
+     - 命令行参数解析（使用 `meow` 库进行参数解析，这是一个CLI应用辅助工具，用于简化命令行参数处理）
+     - 环境变量加载（使用 `dotenv` 库加载 .env 文件，这是一个环境变量管理工具，用于从文件加载环境变量）
      - 主程序启动（使用 Node.js 的模块系统）
 
 2. **应用入口** (`src/app.tsx`)
-   - React 应用初始化（使用 React 18+ 的 createRoot API）
+   - React 应用初始化（使用 React 18+ 的 createRoot API，React是构建用户界面的核心库）
    - 全局状态管理（使用 React Context API 和自定义 Hooks）
-   - 主题和样式设置（使用 Ink 的主题系统和自定义样式）
+   - 主题和样式设置（使用 Ink 的主题系统和自定义样式，Ink是命令行界面的React渲染器）
 
 3. **CLI 主组件** (`src/cli.tsx`)
-   - 命令行界面布局（使用 Ink 的 Box 和 Text 组件）
+   - 命令行界面布局（使用 Ink 的 Box 和 Text 组件，提供类似React的组件化终端UI）
    - 用户输入处理（使用 Ink 的 TextInput 和 useInput Hook）
    - 消息展示逻辑（使用 React 的状态管理和 Ink 的渲染系统）
 
 #### 5.1.2 基础组件学习
 1. **聊天组件** (`src/components/chat/`)
-   - `terminal-chat.tsx`: 聊天主界面（基于 React + Ink 实现，使用 TypeScript 类型系统，依赖：`react`, `ink`, `@types/react`）
-   - `terminal-chat-input.tsx`: 输入组件（使用 Ink 的 TextInput 组件，支持多行输入和快捷键，依赖：`ink`, `ink-text-input`）
-   - `terminal-chat-response-item.tsx`: 响应展示（使用 Ink 的 Box 和 Text 组件，支持 Markdown 渲染，依赖：`ink`, `marked`, `marked-terminal`）
+   - `terminal-chat.tsx`: 聊天主界面（基于 React + Ink 实现，使用 TypeScript 类型系统，依赖：`react`(用户界面库), `ink`(终端UI渲染器), `@types/react`(React类型定义)）
+   - `terminal-chat-input.tsx`: 输入组件（使用 Ink 的 TextInput 组件，支持多行输入和快捷键，依赖：`ink`, `ink-text-input`(Ink的文本输入组件)）
+   - `terminal-chat-response-item.tsx`: 响应展示（使用 Ink 的 Box 和 Text 组件，支持 Markdown 渲染，依赖：`ink`, `marked`(Markdown解析器), `marked-terminal`(将Markdown渲染到终端的工具)）
    - `message-history.tsx`: 消息历史管理（使用 React Hooks 管理状态，支持消息分组和滚动，依赖：`react`, `@types/react`）
 
 2. **工具组件** (`src/components/vendor/`)
-   - `ink-spinner.tsx`: 加载动画（使用 cli-spinners 库，支持多种动画效果，依赖：`cli-spinners`）
+   - `ink-spinner.tsx`: 加载动画（使用 cli-spinners 库，支持多种动画效果，依赖：`cli-spinners`(提供多种终端加载动画样式)）
    - `ink-text-input.tsx`: 文本输入（基于 Ink 的 TextInput，添加了自定义样式和事件处理，依赖：`ink`, `ink-text-input`）
-   - `ink-select/`: 选择组件（使用 Ink 的选择组件，支持键盘导航和自定义主题，依赖：`ink`, `ink-select`）
+   - `ink-select/`: 选择组件（使用 Ink 的选择组件，支持键盘导航和自定义主题，依赖：`ink`, `ink-select`(Ink的选择组件，用于提供交互式菜单)）
 
 3. **覆盖层组件**
    - `help-overlay.tsx`: 帮助信息（使用 Ink 的 Box 组件，支持快捷键和滚动，依赖：`ink`）
@@ -136,17 +136,17 @@ bun run format
 
 #### 5.2.1 AI 代理实现 (`src/utils/agent/`)
 1. **代理主循环** (`agent-loop.ts`)
-   - 消息处理流程（使用 OpenAI API，支持流式响应，依赖：`openai`）
+   - 消息处理流程（使用 OpenAI API，支持流式响应，依赖：`openai`(OpenAI API客户端库，用于与OpenAI服务交互)）
    - 命令执行控制（使用 Node.js 的 child_process，依赖：Node.js 核心模块）
-   - 状态管理（使用 TypeScript 类型系统，依赖：`typescript`）
+   - 状态管理（使用 TypeScript 类型系统，依赖：`typescript`(TypeScript编译器)）
 
 2. **命令执行** (`exec.ts`)
-   - 命令解析（使用 shell-quote 解析命令，依赖：`shell-quote`）
+   - 命令解析（使用 shell-quote 解析命令，依赖：`shell-quote`(用于解析和引用shell命令)）
    - 执行环境设置（使用 Node.js 的 process 和 env，依赖：Node.js 核心模块）
-   - 结果处理（使用 chalk 格式化输出，依赖：`chalk`）
+   - 结果处理（使用 chalk 格式化输出，依赖：`chalk`(终端字符串样式库，用于美化命令行输出)）
 
 3. **补丁应用** (`apply-patch.ts`)
-   - 补丁解析（使用 diff 库解析差异，依赖：`diff`, `@types/diff`）
+   - 补丁解析（使用 diff 库解析差异，依赖：`diff`(用于比较文本差异的库), `@types/diff`(diff库的类型定义)）
    - 文件修改（使用 Node.js 的 fs 模块，依赖：Node.js 核心模块）
    - 变更验证（使用 TypeScript 类型检查，依赖：`typescript`）
 
@@ -168,7 +168,7 @@ bun run format
 3. **上下文管理**
    - `context.ts`: 上下文处理（使用 TypeScript 类型系统，依赖：`typescript`）
    - `context_files.ts`: 文件上下文（使用 Node.js 的 fs 模块，依赖：Node.js 核心模块）
-   - `context_limit.ts`: 上下文限制（使用 Token 计数和限制算法，依赖：`openai`）
+   - `context_limit.ts`: 上下文限制（使用 Token 计数和限制算法，依赖：`openai`, `zod`(TypeScript优先的schema验证库)）
 
 ### 5.3 第三阶段：高级功能和扩展
 
@@ -179,28 +179,28 @@ bun run format
 
 2. **自动审批** (`src/utils/auto-approval-mode.ts`)
    - 审批规则定义（使用 TypeScript 类型系统，依赖：`typescript`）
-   - 自动决策逻辑（使用规则引擎和模式匹配，依赖：自定义实现）
-   - 安全限制（使用权限检查和验证，依赖：自定义实现）
+   - 自动决策逻辑（使用规则引擎和模式匹配，依赖：`fast-deep-equal`(深度对象比较工具)）
+   - 安全限制（使用权限检查和验证，依赖：`zod`）
 
 #### 5.3.2 文件操作
 1. **文件处理** (`src/utils/singlepass/`)
-   - `file_ops.ts`: 文件操作（使用 Node.js 的 fs 模块，依赖：Node.js 核心模块）
-   - `code_diff.ts`: 代码差异（使用 diff 库和语法高亮，依赖：`diff`, `@types/diff`）
+   - `file_ops.ts`: 文件操作（使用 Node.js 的 fs 模块，依赖：Node.js 核心模块，`file-type`(文件类型检测库)）
+   - `code_diff.ts`: 代码差异（使用 diff 库和语法高亮，依赖：`diff`, `@types/diff`, `chalk`）
    - `context_files.ts`: 文件上下文（使用文件系统监控，依赖：Node.js 核心模块）
 
 2. **Git 集成**
-   - `check-in-git.ts`: Git 检查（使用 simple-git 库，依赖：`simple-git`）
+   - `check-in-git.ts`: Git 检查（使用 simple-git 库，依赖：`simple-git`(Git命令的Node.js封装)）
    - 版本控制集成（使用 Git 命令行工具，依赖：系统命令）
    - 变更追踪（使用 Git diff 和 status，依赖：系统命令）
 
 #### 5.3.3 测试和调试
 1. **单元测试** (`tests/`)
-   - 组件测试（使用 Vitest 和 React Testing Library，依赖：`vitest`, `@testing-library/react`）
+   - 组件测试（使用 Vitest 和 React Testing Library，依赖：`vitest`(现代化的测试框架), `@testing-library/react`(React组件测试库)）
    - 工具函数测试（使用 Vitest 和 Jest 风格断言，依赖：`vitest`）
-   - 代理功能测试（使用模拟和存根，依赖：`vitest`）
+   - 代理功能测试（使用模拟和存根，依赖：`vitest`, `ink-testing-library`(Ink的测试工具库)）
 
 2. **调试工具**
-   - 日志系统（使用 debug 模块，依赖：`debug`）
+   - 日志系统（使用 debug 模块，依赖：`debug`(调试日志工具)）
    - 错误追踪（使用 Error 堆栈和源映射，依赖：Node.js 核心模块）
    - 性能分析（使用 Node.js 的性能钩子，依赖：Node.js 核心模块）
 

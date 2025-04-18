@@ -1,12 +1,15 @@
 #!/usr/bin/env sh
 # resolve script path in case of symlink
+# 在符号链接的情况下解析脚本路径
 SOURCE="$0"
 while [ -h "$SOURCE" ]; do
   DIR=$(dirname "$SOURCE")
   SOURCE=$(readlink "$SOURCE")
   case "$SOURCE" in
     /*) ;;  # absolute path
+    # 绝对路径
     *) SOURCE="$DIR/$SOURCE" ;;  # relative path
+    # 相对路径
   esac
 done
 DIR=$(cd "$(dirname "$SOURCE")" && pwd)

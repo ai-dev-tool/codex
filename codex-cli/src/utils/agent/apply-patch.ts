@@ -1,5 +1,7 @@
 // Based on reference implementation from
 // https://cookbook.openai.com/examples/gpt4-1_prompting_guide#reference-implementation-apply_patchpy
+// 基于参考实现：
+// https://cookbook.openai.com/examples/gpt4-1_prompting_guide#reference-implementation-apply_patchpy
 
 import fs from "fs";
 import path from "path";
@@ -16,6 +18,7 @@ import {
 
 // -----------------------------------------------------------------------------
 // Types & Models
+// 类型和模型
 // -----------------------------------------------------------------------------
 
 export enum ActionType {
@@ -70,10 +73,12 @@ export function assemble_changes(
 
 // -----------------------------------------------------------------------------
 // Patch‑related structures
+// 补丁相关结构
 // -----------------------------------------------------------------------------
 
 export interface Chunk {
   orig_index: number; // line index of the first line in the original file
+  // 原始文件中第一行的行索引
   del_lines: Array<string>;
   ins_lines: Array<string>;
 }
@@ -93,6 +98,7 @@ export class DiffError extends Error {}
 
 // -----------------------------------------------------------------------------
 // Parser (patch text -> Patch)
+// 解析器（补丁文本 -> 补丁）
 // -----------------------------------------------------------------------------
 
 class Parser {
@@ -389,10 +395,14 @@ function peek_next_section(
       // Tolerate invalid lines where the leading whitespace is missing. This is necessary as
       // the model sometimes doesn't fully adhere to the spec and returns lines without leading
       // whitespace for context lines.
+      // 容忍缺少前导空格的无效行。这是必要的，因为
+      // 模型有时不完全遵循规范，并且返回的上下文行
+      // 没有前导空格。
       mode = "keep";
       line = " " + line;
 
       // TODO: Re-enable strict mode.
+      // TODO: 重新启用严格模式。
       // throw new DiffError(`Invalid Line: ${line}`)
     }
 
@@ -433,6 +443,7 @@ function peek_next_section(
 
 // -----------------------------------------------------------------------------
 // High‑level helpers
+// 高级辅助函数
 // -----------------------------------------------------------------------------
 
 export function text_to_patch(
@@ -547,6 +558,7 @@ export function patch_to_commit(
 
 // -----------------------------------------------------------------------------
 // Filesystem helpers for Node environment
+// Node环境的文件系统辅助函数
 // -----------------------------------------------------------------------------
 
 export function load_files(
@@ -560,6 +572,8 @@ export function load_files(
     } catch {
       // Convert any file read error into a DiffError so that callers
       // consistently receive DiffError for patch-related failures.
+      // 将任何文件读取错误转换为DiffError，以便调用者
+      // 始终收到与补丁相关失败的DiffError。
       throw new DiffError(`File not found: ${p}`);
     }
   }
@@ -606,6 +620,7 @@ export function process_patch(
 
 // -----------------------------------------------------------------------------
 // Default filesystem implementations
+// 默认文件系统实现
 // -----------------------------------------------------------------------------
 
 function open_file(p: string): string {
@@ -629,6 +644,7 @@ function remove_file(p: string): void {
 
 // -----------------------------------------------------------------------------
 // CLI mode. Not exported, executed only if run directly.
+// CLI模式。不导出，仅在直接运行时执行。
 // -----------------------------------------------------------------------------
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -637,6 +653,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   process.stdin.on("data", (chunk) => (patchText += chunk));
   process.stdin.on("end", () => {
     if (!patchText) {
+      // eslint-disable-next-line no-console
       // eslint-disable-next-line no-console
       console.error("Please pass patch text through stdin");
       process.exit(1);
@@ -651,6 +668,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       // eslint-disable-next-line no-console
       console.log(result);
     } catch (err: unknown) {
+      // eslint-disable-next-line no-console
       // eslint-disable-next-line no-console
       console.error(err instanceof Error ? err.message : String(err));
       process.exit(1);
